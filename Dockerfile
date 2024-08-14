@@ -8,9 +8,11 @@ ENV PYTHONUNBUFFERED=1
 RUN apk update && apk add git
 
 COPY requirements.txt .
+COPY .env ./.env
 
 RUN pip install -r requirements.txt --no-cache-dir
 
 COPY . .
 
 EXPOSE 8000
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
