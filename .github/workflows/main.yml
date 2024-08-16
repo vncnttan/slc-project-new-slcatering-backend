@@ -1,0 +1,57 @@
+name: Deploy Backend to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+      
+      - name: Login to Dockerhub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Creating env file
+        run: |
+          touch .env
+          echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
+          echo FRONTEND_HOST=${{ secrets.FRONTEND_HOST }} >> .env
+          
+          echo DB_NAME=${{ secrets.DB_NAME }} >> .env
+          echo DB_USER=${{ secrets.DB_USER }} >> .env
+          echo DB_PASS=${{ secrets.DB_PASS }} >> .env
+          echo DB_HOST=${{ secrets.DB_HOST }} >> .env
+          echo DEBUG=${{ secrets.DEBUG }} >> .env
+          
+          echo PAYMENT_GATEWAY_URL=${{ secrets.PAYMENT_GATEWAY_URL }} >> .env
+          echo PAYMENT_GATEWAY_MERCHANT_CODE=${{ secrets.PAYMENT_GATEWAY_MERCHANT_CODE }} >> .env
+          echo PAYMENT_GATEWAY_API_KEY=${{ secrets.PAYMENT_GATEWAY_API_KEY }} >> .env
+          echo PAYMENT_GATEWAY_METHOD_CODE=${{ secrets.PAYMENT_GATEWAY_METHOD_CODE }} >> .env
+          echo PAYMENT_GATEWAY_CALLBACK_URL=${{ secrets.PAYMENT_GATEWAY_CALLBACK_URL }} >> .env
+
+          cat .env
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t slcatering-be:latest .
+          docker tag slcatering-be:latest ${{ secrets.DOCKERHUB_USERNAME }}/slcatering-be:latest
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/slcatering-be:latest
+      
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY}}
+          script: |
+            cd slcatering-docker-be/
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/slcatering-be:latest
+            docker compose down
+            docker compose up -d
