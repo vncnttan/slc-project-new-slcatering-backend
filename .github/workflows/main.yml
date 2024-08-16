@@ -15,8 +15,9 @@ jobs:
       - name: Login to Dockerhub
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ secrets.DOCKER_REGISTRY_LOCATION }}
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_PASS }}
 
       - name: Creating env file
         run: |
@@ -41,8 +42,8 @@ jobs:
       - name: Build and push Docker image
         run: |
           docker build -t slcatering-be:latest .
-          docker tag slcatering-be:latest ${{ secrets.DOCKERHUB_USERNAME }}/slcatering-be:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/slcatering-be:latest
+          docker tag slcatering-be:latest ${{ secrets.DOCKER_REGISTRY_LOCATION  }}/slcatering-be:latest
+          docker push ${{ secrets.DOCKER_REGISTRY_LOCATION }}/slcatering-be:latest
       
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
@@ -52,6 +53,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY}}
           script: |
             cd slcatering-docker-be/
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/slcatering-be:latest
+            docker pull ${{ secrets.DOCKER_REGISTRY_LOCATION }}/slcatering-be:latest
             docker compose down
             docker compose up -d
