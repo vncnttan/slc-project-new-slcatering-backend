@@ -80,18 +80,17 @@ SIMPLE_JWT = {
 
 # CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_WHITELIST = (
-    os.environ.get("FRONTEND_HOST"),
+CORS_ALLOWED_ORIGINS = [
+    os.environ.get("FRONTEND_HOST")
     # TODO before hosting: Revert back to https
-    "http://localhost:5173"
-)
+    # "http://localhost:5173"
+]
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'api.middlewares.authentication_middleware.AuthenticationMiddleware',
     'api.middlewares.authentication_middleware.SellerMiddleware',
     'api.middlewares.authentication_middleware.OrderMiddleware',
-    'django.middleware.common.CommonMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

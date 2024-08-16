@@ -1,3 +1,5 @@
 .idea/
 venv/
 .env
+.env.dev
+.env.prod
