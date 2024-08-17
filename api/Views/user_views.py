@@ -1,24 +1,14 @@
-from django.shortcuts import render
 from django.http.response import JsonResponse
 from rest_framework.parsers import JSONParser
 from rest_framework import status
-from django.contrib.auth.hashers import make_password, check_password
-from rest_framework import permissions
 from api.services import user_services, catering_services
 from api.models import User
+from api.serializers import CateringSerializer
 from api.serializers import UserSerializer
-from rest_framework.decorators import api_view, permission_classes
-from datetime import datetime
-from django.core.mail import send_mail
-from django.conf import settings
-from rest_framework_simplejwt.tokens import RefreshToken,AccessToken
-from django.template.loader import render_to_string
-import base64
-import jwt
+from rest_framework.decorators import api_view
+from rest_framework_simplejwt.tokens import AccessToken
 import requests
 from api.services.user_services import get_spesific_user_by_username
-from django.http import HttpResponse
-from datetime import datetime, timedelta
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
@@ -75,7 +65,7 @@ def leaderboards(request):
         if request.GET.get('menu') == "true":
             caterings = catering_services.get_popular_caterings()
             if caterings is not None :
-                return JsonResponse(caterings.data,safe=False, status=status.HTTP_200_OK)
+                return JsonResponse(caterings.data, safe=False, status=status.HTTP_200_OK)
             else:
                 return JsonResponse([], status=status.HTTP_200_OK)
         else:
