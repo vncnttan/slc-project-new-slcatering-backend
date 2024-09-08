@@ -3,7 +3,6 @@ from rest_framework.parsers import JSONParser
 from rest_framework import status
 from api.services import user_services, catering_services
 from api.models import User
-from api.serializers import CateringSerializer
 from api.serializers import UserSerializer
 from rest_framework.decorators import api_view
 from rest_framework_simplejwt.tokens import AccessToken

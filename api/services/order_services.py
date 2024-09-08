@@ -11,7 +11,7 @@ from django.conf import settings
 def create_order_services(user_id, orders, notes,catering : Catering):
     # TODO: Update logic for creating order through websocket with payment gateway
     try:
-        #check if the stock is < then all the quantity order
+        # Check if the stock is < then all the quantity order
         total_order = 0
         for order in orders:
             total_order += order["quantity"]

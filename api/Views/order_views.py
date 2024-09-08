@@ -115,6 +115,7 @@ def create_order(request):
         catering = get_specific_catering_by_id(data["catering_id"])
         if catering != None:
             new_orders = create_order_services(user_id, data["variants"], data["notes"],catering)
+            print("I am here", new_orders)
             if new_orders != None:
                 order_ids = [order.data['id'] for order in new_orders]
                 # concatenated_order_ids = '#'.join(map(str, order_ids))
@@ -128,7 +129,9 @@ def create_order(request):
                         variant = VariantCaterings.objects.get(id = new_order.data["variant"])
                         total_amount += variant.additional_price
                         
-                        
+                print("Total amount: ", total_amount)
+                print("Order ids: ", order_ids)
+                
                 request_body = {
                     "merchantCode": settings.PAYMENT_GATEWAY_MERCHANT_CODE,
                     "paymentAmount": total_amount,
@@ -158,10 +161,10 @@ def create_order(request):
                         order_view_serializer = OrderViewSerializer(instance=order_obj).data
                         list_order_view_serializer.append(order_view_serializer)
                     
-                    
                     return JsonResponse({
                         "order_list" : list_order_view_serializer,
-                        "qrString" : response["qrString"], "amount" : response["amount"],
+                        "qrString" : response["qrString"], 
+                        "amount" : response["amount"],
                         }, status=status.HTTP_201_CREATED)
                 else:
                     return JsonResponse({"message" : "Oops something went wrong" + response.text + str(response.status_code)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
