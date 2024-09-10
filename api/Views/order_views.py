@@ -174,7 +174,8 @@ def create_order(request):
                 
             else:
                 return JsonResponse({"message" : "Oops something went wrong" + str(e), "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
+        else:
+            return JsonResponse({"message" : "Catering not found"}, status=status.HTTP_404_NOT_FOUND)
 
     except Exception as e:
         print(e)
