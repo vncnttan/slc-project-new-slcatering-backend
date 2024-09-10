@@ -1,5 +1,5 @@
 from django.conf.urls import url
-from api.Views import user_views, catering_views, order_views, payment_views
+from api.Views import user_views, catering_views, order_views
 from django.urls import path
 from rest_framework_simplejwt import views as jwt_views
 
