@@ -18,6 +18,9 @@ from django.conf import settings
 import requests
 import json
 import hashlib
+from django.views.decorators.csrf import csrf_exempt
+import json
+
 
 @swagger_auto_schema(
     method='get',
@@ -176,3 +179,34 @@ def create_order(request):
     except Exception as e:
         print(e)
         return JsonResponse({"message" : "Oops something went wrong" + str(e), "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+@csrf_exempt 
+def payment_callback(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+
+            # Extract data from the POST request
+            transaction_status = data.get('status', None)
+            order_id = data.get('order_id', None)
+            amount = data.get('amount', None)
+
+            if transaction_status == 'success':
+                # Handle success logic (e.g., marking order as paid)
+                print(f"Order {order_id} is paid with amount {amount}")
+                print("Callback success is triggered")
+                print()
+                pass
+            elif transaction_status == 'failed':
+                # Handle failure logic
+                print(f"Order {order_id} is paid with amount {amount}")
+                print("Callback failed is triggered")
+                print()
+                pass
+
+            return JsonResponse({'message': 'Callback received'}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)

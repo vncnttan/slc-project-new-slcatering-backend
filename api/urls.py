@@ -10,5 +10,5 @@ urlpatterns = [
     path('catering', catering_views.catering),
     path('order', order_views.order),
     path('leaderboards', user_views.leaderboards),
-    # path('payment/callback', payment_views.payment_callback),
+    path('payment/callback', order_views.payment_callback),
 ]
