@@ -92,6 +92,7 @@ def catering(request):
                     catering = catering_services.get_all_caterings_by_merchant(request.user_id)
                     if catering == None:
                         return JsonResponse([], status=status.HTTP_200_OK)
+                    catering = CateringSerializer(catering)
                     return JsonResponse(catering.data, status=status.HTTP_200_OK, safe=False)
                 else:
                     return JsonResponse({"message" : "Access denied"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -100,16 +101,16 @@ def catering(request):
             except Exception as e :
                 return JsonResponse({"message" : "Oops something went wrong", "error" : str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        # Most Popular Menu
-
         if request.GET.get('id'):
             catering = catering_services.get_specific_catering_by_id(request.GET.get('id'))
             if catering == None:
                 return JsonResponse({"message" : "Catering does not exist"}, status=status.HTTP_404_NOT_FOUND)
             else:
+                catering = CateringSerializer(catering)
                 return JsonResponse(catering.data, status=status.HTTP_200_OK, safe=False)
         
         catering = catering_services.get_all_caterings()
+        print(catering)
         if catering == None:
             return JsonResponse({"message" : "Catering does not exist"}, status=status.HTTP_404_NOT_FOUND)
         else:

@@ -15,43 +15,44 @@ jobs:
       - name: Login to Dockerhub
         uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ${{ vars.DOCKER_REGISTRY_LOCATION }}
+          username: ${{ secrets.DOCKER_REGISTRY_USERNAME }}
+          password: ${{ secrets.DOCKER_REGISTRY_PASS }}
 
       - name: Creating env file
         run: |
           touch .env
           echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
-          echo FRONTEND_HOST=${{ secrets.FRONTEND_HOST }} >> .env
+          echo FRONTEND_HOST=${{ vars.FRONTEND_HOST }} >> .env
           
-          echo DB_NAME=${{ secrets.DB_NAME }} >> .env
-          echo DB_USER=${{ secrets.DB_USER }} >> .env
+          echo DB_NAME=${{ vars.DB_NAME }} >> .env
+          echo DB_USER=${{ vars.DB_USER }} >> .env
           echo DB_PASS=${{ secrets.DB_PASS }} >> .env
-          echo DB_HOST=${{ secrets.DB_HOST }} >> .env
-          echo DEBUG=${{ secrets.DEBUG }} >> .env
+          echo DB_HOST=${{ vars.DB_HOST }} >> .env
+          echo DEBUG=${{ vars.DEBUG }} >> .env
           
-          echo PAYMENT_GATEWAY_URL=${{ secrets.PAYMENT_GATEWAY_URL }} >> .env
-          echo PAYMENT_GATEWAY_MERCHANT_CODE=${{ secrets.PAYMENT_GATEWAY_MERCHANT_CODE }} >> .env
-          echo PAYMENT_GATEWAY_API_KEY=${{ secrets.PAYMENT_GATEWAY_API_KEY }} >> .env
-          echo PAYMENT_GATEWAY_METHOD_CODE=${{ secrets.PAYMENT_GATEWAY_METHOD_CODE }} >> .env
-          echo PAYMENT_GATEWAY_CALLBACK_URL=${{ secrets.PAYMENT_GATEWAY_CALLBACK_URL }} >> .env
+          echo PAYMENT_GATEWAY_URL=${{ vars.PAYMENT_GATEWAY_URL }} >> .env
+          echo PAYMENT_GATEWAY_MERCHANT_CODE=${{ vars.PAYMENT_GATEWAY_MERCHANT_CODE }} >> .env
+          echo PAYMENT_GATEWAY_API_KEY=${{ vars.PAYMENT_GATEWAY_API_KEY }} >> .env
+          echo PAYMENT_GATEWAY_METHOD_CODE=${{ vars.PAYMENT_GATEWAY_METHOD_CODE }} >> .env
+          echo PAYMENT_GATEWAY_CALLBACK_URL=${{ vars.PAYMENT_GATEWAY_CALLBACK_URL }} >> .env
 
           cat .env
 
       - name: Build and push Docker image
         run: |
           docker build -t slcatering-be:latest .
-          docker tag slcatering-be:latest ${{ secrets.DOCKERHUB_USERNAME }}/slcatering-be:latest
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/slcatering-be:latest
+          docker tag slcatering-be:latest ${{ vars.DOCKER_REGISTRY_LOCATION  }}/slcatering-be:latest
+          docker push ${{ vars.DOCKER_REGISTRY_LOCATION }}/slcatering-be:latest
       
       - name: Deploy to VPS
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.VPS_IP }}
-          username: ${{ secrets.VPS_USER }}
+          host: ${{ vars.VPS_IP }}
+          username: ${{ vars.VPS_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY}}
           script: |
             cd slcatering-docker-be/
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/slcatering-be:latest
+            docker pull ${{ vars.DOCKER_REGISTRY_LOCATION }}/slcatering-be:latest
             docker compose down
             docker compose up -d

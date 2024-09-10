@@ -3,3 +3,6 @@ venv/
 .env
 .env.dev
 .env.prod
+*.pyc
+__pycache__/
+*.py[cod]
