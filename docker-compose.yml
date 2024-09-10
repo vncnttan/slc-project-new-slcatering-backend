@@ -3,7 +3,7 @@ version: '3.8'
 services:
   slcatering:
     container_name: slcatering-be
-    image: vncnttan/slcatering-be
+    image: registry.vncnttan.my.id/slcatering-be
     build: 
       context: .
       dockerfile: Dockerfile
