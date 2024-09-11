@@ -132,13 +132,11 @@ def create_order(request):
                         variant = VariantCaterings.objects.get(id = new_order.data["variant"])
                         total_amount += variant.additional_price
                         
-                # print("Total amount: ", total_amount)
-                # print("Order ids: ", order_ids)
-
                 print(f"MC: {settings.PAYMENT_GATEWAY_MERCHANT_CODE}")
                 print(f"OI: {order_ids[0]}")
                 print(f"TA: {str(total_amount)}")
                 print(f"PGMC: {settings.PAYMENT_GATEWAY_METHOD_CODE}")
+                print()
                 
                 request_body = {
                     "merchantCode": settings.PAYMENT_GATEWAY_MERCHANT_CODE,
