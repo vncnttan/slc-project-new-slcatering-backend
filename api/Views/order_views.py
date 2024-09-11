@@ -135,7 +135,7 @@ def create_order(request):
                 print(f"MC: {settings.PAYMENT_GATEWAY_MERCHANT_CODE}")
                 print(f"OI: {order_ids[0]}")
                 print(f"TA: {str(total_amount)}")
-                print(f"PGMC: {settings.PAYMENT_GATEWAY_METHOD_CODE}")
+                print(f"PGMC: {settings.PAYMENT_GATEWAT_API_KEY}")
                 print()
                 
                 request_body = {
