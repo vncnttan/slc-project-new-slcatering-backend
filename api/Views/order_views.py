@@ -182,20 +182,25 @@ def create_order(request):
         return JsonResponse({"message" : "Oops something went wrong" + str(e), "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 @csrf_exempt 
-def payment_callback(request):
-    if request.content_type != 'application/json':
-        print(f"Invalid content type: {request.content_type}")
-        return JsonResponse({'error': 'Invalid content type'}, status=400)
-    
+def payment_callback(request):    
     if request.method == 'POST':
+        if request.content_type == 'application/x-www-form-urlencoded':
+            data = request.POST.dict()
+        else:
+            print(f"Invalid content type: {request.content_type}")
+            return JsonResponse({'error': 'Invalid content type'}, status=400)
+        
         try:
-            data = json.loads(request.body.decode('utf-8'))
-            print(f"Data received: {data}")
+            required_fields = ['status', 'order_id', 'amount']
+            print(f"Data: {data}")
 
-            # Extract data from the POST request
-            transaction_status = data.get('status', None)
-            order_id = data.get('order_id', None)
-            amount = data.get('amount', None)
+            if not all(field in data for field in required_fields):
+                print(f"Missing required fields. Received data: {data}")
+                return JsonResponse({'error': 'Missing required fields'}, status=400)
+
+            transaction_status = data['status']
+            order_id = data['order_id']
+            amount = data['amount']
 
             if transaction_status == 'success':
                 # Handle success logic (e.g., marking order as paid)
@@ -209,6 +214,11 @@ def payment_callback(request):
                 print("Callback failed is triggered")
                 print()
                 pass
+
+            # TODO: Verify signature
+            # if not verify_signature(data, request.headers.get('X-Signature')):
+            #     logger.error("Invalid signature")
+            #     return JsonResponse({'error': 'Invalid signature'}, status=400)
 
             return JsonResponse({'message': 'Callback received'}, status=200)
 
