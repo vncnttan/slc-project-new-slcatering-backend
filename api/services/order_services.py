@@ -39,4 +39,5 @@ def create_order_services(user_id, orders, notes,catering : Catering):
                         new_orders.append(new_order)
             return new_orders
     except Exception as e :
+        print(f"Erorr: {e}")
         return None

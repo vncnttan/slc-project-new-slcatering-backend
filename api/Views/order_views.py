@@ -170,7 +170,7 @@ def create_order(request):
                         "amount" : response["amount"],
                         }, status=status.HTTP_201_CREATED)
                 else:
-                    return JsonResponse({"message" : "Oops something went wrong" + response.text + str(response.status_code)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    return JsonResponse({"message" : "Oops something went wrong, New orders is none"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
             else:
                 return JsonResponse({"message" : "Oops something went wrong" + str(e), "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -183,9 +183,14 @@ def create_order(request):
     
 @csrf_exempt 
 def payment_callback(request):
+    if request.content_type != 'application/json':
+        print(f"Invalid content type: {request.content_type}")
+        return JsonResponse({'error': 'Invalid content type'}, status=400)
+    
     if request.method == 'POST':
         try:
             data = json.loads(request.body.decode('utf-8'))
+            print(f"Data received: {data}")
 
             # Extract data from the POST request
             transaction_status = data.get('status', None)
