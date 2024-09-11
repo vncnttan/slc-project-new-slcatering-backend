@@ -33,7 +33,7 @@ jobs:
           
           echo PAYMENT_GATEWAY_URL=${{ vars.PAYMENT_GATEWAY_URL }} >> .env
           echo PAYMENT_GATEWAY_MERCHANT_CODE=${{ vars.PAYMENT_GATEWAY_MERCHANT_CODE }} >> .env
-          echo PAYMENT_GATEWAY_API_KEY=${{ vars.PAYMENT_GATEWAY_API_KEY }} >> .env
+          echo PAYMENT_GATEWAY_API_KEY=${{ secrets.PAYMENT_GATEWAY_API_KEY }} >> .env
           echo PAYMENT_GATEWAY_METHOD_CODE=${{ vars.PAYMENT_GATEWAY_METHOD_CODE }} >> .env
           echo PAYMENT_GATEWAY_CALLBACK_URL=${{ vars.PAYMENT_GATEWAY_CALLBACK_URL }} >> .env
 
