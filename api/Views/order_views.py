@@ -170,10 +170,10 @@ def create_order(request):
                         "amount" : response["amount"],
                         }, status=status.HTTP_201_CREATED)
                 else:
-                    return JsonResponse({"message" : "Oops something went wrong, New orders is none"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    return JsonResponse({"message" : f"Oops something went wrong! {response.status_code}: {response.text}, {response.json()}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 
             else:
-                return JsonResponse({"message" : "Oops something went wrong" + str(e), "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return JsonResponse({"message" : "New orders is not found"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         else:
             return JsonResponse({"message" : "Catering not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -182,7 +182,7 @@ def create_order(request):
         return JsonResponse({"message" : "Oops something went wrong" + str(e), "error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
 @csrf_exempt 
-def payment_callback(request):    
+def payment_callback(request):
     if request.method == 'POST':
         if request.content_type == 'application/x-www-form-urlencoded':
             data = request.POST.dict()
@@ -198,20 +198,20 @@ def payment_callback(request):
                 print(f"Missing required fields. Received data: {data}")
                 return JsonResponse({'error': 'Missing required fields'}, status=400)
 
-            transaction_status = data['status']
-            order_id = data['order_id']
+            transaction_status = data['resultCode']
+            duitku_reference = data['reference']
             amount = data['amount']
 
-            if transaction_status == 'success':
+            if transaction_status == '00':
                 # Handle success logic (e.g., marking order as paid)
-                print(f"Order {order_id} is paid with amount {amount}")
+                print(f"Order with ref {duitku_reference} is paid with amount {amount}")
                 print("Callback success is triggered")
                 print()
                 pass
-            elif transaction_status == 'failed':
+            elif transaction_status == '01':
                 # Handle failure logic
-                print(f"Order {order_id} is paid with amount {amount}")
-                print("Callback failed is triggered")
+                print(f"Order with ref {duitku_reference} is paid with amount {amount}")
+                print("Callback cancel is triggered")
                 print()
                 pass
 
