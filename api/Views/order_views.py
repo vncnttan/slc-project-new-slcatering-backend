@@ -15,6 +15,7 @@ from api.services.catering_services import get_specific_catering_by_id
 from api.services.variant_services import get_variant_by_id
 from api.services.order_services import create_order_services
 from django.conf import settings
+from django.core.cache import cache
 import requests
 import json
 import hashlib
@@ -118,57 +119,69 @@ def create_order(request):
         catering = get_specific_catering_by_id(data["catering_id"])
         if catering != None:
             new_orders = create_order_services(user_id, data["variants"], data["notes"],catering)
-            print("I am here", new_orders)
+
             if new_orders != None:
-                order_ids = [order.data['id'] for order in new_orders]
+                # order_ids = [order.data['id'] for order in new_orders]
                 # concatenated_order_ids = '#'.join(map(str, order_ids))
                 
+                
+                # Calculating total amount
                 user = User.objects.get(id = user_id)
                 total_amount = 0
                 for new_order in new_orders:
-                    catering = Catering.objects.get(id = new_order.data["catering"])
                     total_amount += catering.price
-                    if new_order.data["variant"] != None:
-                        variant = VariantCaterings.objects.get(id = new_order.data["variant"])
+                    if new_order["variant"] != None:
+                        variant = VariantCaterings.objects.get(id = new_order["variant"])
                         total_amount += variant.additional_price
-                        
-                print(f"MC: {settings.PAYMENT_GATEWAY_MERCHANT_CODE}")
-                print(f"OI: {order_ids[0]}")
-                print(f"TA: {str(total_amount)}")
-                print(f"PGMC: {settings.PAYMENT_GATEWAY_API_KEY}")
-                print()
-                
+
+                # Create Request Structure
                 request_body = {
                     "merchantCode": settings.PAYMENT_GATEWAY_MERCHANT_CODE,
                     "paymentAmount": total_amount,
                     "paymentMethod": settings.PAYMENT_GATEWAY_METHOD_CODE,
-                    "merchantOrderId": order_ids[0],
+                    "merchantOrderId": data["catering_id"] + user.username,
                     "productDetails": "Pembayaran untuk catering makanan.",
                     "email": user.username+ "@gmail.com",
                     "customerVaName" : user.username,
                     "returnUrl" : "https://example.com",
                     "callbackUrl" : settings.PAYMENT_GATEWAY_CALLBACK_URL,
-                    "signature":hashlib.md5((settings.PAYMENT_GATEWAY_MERCHANT_CODE + order_ids[0] + str(total_amount) + settings.PAYMENT_GATEWAY_API_KEY).encode("utf-8")).hexdigest()
+                    "signature":hashlib.md5((settings.PAYMENT_GATEWAY_MERCHANT_CODE + data["catering_id"] + user.username + str(total_amount) + settings.PAYMENT_GATEWAY_API_KEY).encode("utf-8")).hexdigest()
                 }
                 headers = {"Content-Type": "application/json"}
                 request_body_json = json.dumps(request_body)
                 endpoint_gateway = settings.PAYMENT_GATEWAY_URL + "/v2/inquiry"
     
+                # Send Request to Payment Gateway
                 response = requests.post(endpoint_gateway, data=request_body_json, headers=headers, timeout=30)
                 if response.status_code == 200:
                     response = response.json()
+                    print(f"Response: {response}")
                     duitku_reference = response["reference"]
                     
-                    list_order_view_serializer = []
-                    for new_order in new_orders:
-                        order_obj = Order.objects.get(id = new_order.data["id"])
-                        order_obj.duitku_reference = duitku_reference
-                        order_obj.save()
-                        order_view_serializer = OrderViewSerializer(instance=order_obj).data
-                        list_order_view_serializer.append(order_view_serializer)
-                    
+                    print("Duitku Reference: ", duitku_reference)
+                    # list_order_view_serializer = []
+                    # for new_order in new_orders:
+                        # order_obj = Order.objects.get(id = new_order.data["id"])
+                        # order_obj.duitku_reference = duitku_reference
+                        # order_obj.save()
+                        # order_view_serializer = OrderViewSerializer(instance=order_obj).data
+                        # list_order_view_serializer.append(data)
+
+                    data = {
+                        "user_id" : user_id,
+                        "variants" : data["variants"],
+                        "notes" : data["notes"],
+                        "catering_id" : data["catering_id"],
+                        "duitku_reference" : duitku_reference,
+                        "new_orders" : new_orders,
+                        "amount" : total_amount,
+                        "qrString" : response["qrString"]
+                    }
+                    print(f"Data: {data}")
+                    cache.set(f"cart_{user_id}", json.dumps(data), timeout=3600)
+
                     return JsonResponse({
-                        "order_list" : list_order_view_serializer,
+                        "order_list" : new_orders,
                         "qrString" : response["qrString"], 
                         "amount" : response["amount"],
                         }, status=status.HTTP_201_CREATED)

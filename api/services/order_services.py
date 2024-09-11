@@ -24,19 +24,24 @@ def create_order_services(user_id, orders, notes,catering : Catering):
                 qty = order["quantity"]
                 for _ in range(0, qty):
                     order['is_paid'] = False
-                    order['ordered_by'] = user_id
-                    order['ordered_at'] = datetime.now()
-                    order["notes"] = notes
+                    # order['ordered_by'] = user_id
+                    # order['ordered_at'] = datetime.now()
+                    # order["notes"] = notes
                     order["quantity"]  = 1
-                    order['catering'] = catering.id
+                    # order['catering_id'] = catering.id
                     if order["variant_id"] == "Reguler":
                         order["variant"] = None
                     else:
                         order["variant"] = order['variant_id']
-                    new_order = OrderSerializer(data=order)
-                    if new_order.is_valid(raise_exception=True):
-                        new_order.save()
-                        new_orders.append(new_order)
+
+                    new_orders.append(order)
+
+                    # new_order = OrderSerializer(data=order)
+                    # if new_order.is_valid(raise_exception=True):
+                        # new_order.save()
+                        # new_orders.append(new_order)
+
+                    
             return new_orders
     except Exception as e :
         print(f"Erorr: {e}")
