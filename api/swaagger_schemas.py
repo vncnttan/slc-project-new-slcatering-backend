@@ -138,3 +138,74 @@ login_schema = {
         500: "Internal server error",
     }
 }
+
+get_catering_schema = {
+    'method':'get',
+    'manual_parameters':[
+        openapi.Parameter(
+            name="active",
+            in_=openapi.IN_QUERY,
+            type=openapi.TYPE_BOOLEAN,
+            description="Get active caterings",
+            required=True
+        )
+    ],
+    'responses':{
+        200 : "Succesfull response",
+        401 : "Access denied",
+        500 : "Unexpected error"       
+    }
+}
+
+create_catering_schema = {
+    'method':"post",
+    'request_body':openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "title" : openapi.Schema(type=openapi.TYPE_STRING, description="Catering title"),
+            "price" : openapi.Schema(type=openapi.TYPE_INTEGER, description="Price"),
+            "stock" : openapi.Schema(type=openapi.TYPE_INTEGER, description="Catering maximum order"),
+            "catering_variants" : openapi.Schema(
+                type=openapi.TYPE_ARRAY,
+                description="Catering variants",
+                items=openapi.Schema(
+                    type=openapi.TYPE_OBJECT,
+                    properties={
+                        "variant_name" : openapi.Schema(type=openapi.TYPE_STRING, description="Catering variant name"),
+                        "additional_price": openapi.Schema(type=openapi.TYPE_INTEGER, description="Catering variant extra price")
+                    }
+                ),
+                required=["variant_name", "additional_price"]
+            ),
+        },
+        required=["name", "price", "stock", "date", "catering_variants"]
+    ),
+    'responses':{
+        201 : "Succesfully created catering",
+        400 : "Bad request",
+        401 : "Not authorized",
+        406 : "Failed to process data",
+        500 : "Unexpected error"
+    }
+}
+
+close_catering_schema = {
+    'method':"patch",
+    'operation_description':(
+        "Close catering. "
+        "This endpoint will ask for catering id and will close it. "
+        "It will also validate that the catering can be closed only by its creator."
+    ),
+    'request_body':openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        properties={
+            "catering_id" : openapi.Schema(type=openapi.TYPE_STRING, description="Catering id to be closed")
+        },
+        required=['catering_id']
+    ),
+    'responses':{
+        200 : "Sucesfully closed catering",
+        404 : "Catering not found",
+        500 : "Unexpected error"
+    }
+}
