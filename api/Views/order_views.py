@@ -117,7 +117,7 @@ def create_order(request):
                         "amount" : total_amount,
                         "qrString" : response["qrString"]
                     }
-                    cache.set(f"cart_{user_id}", json.dumps(data), timeout=3600)
+                    cache.set(f"cart_{user_id}", json.dumps(data), timeout=100000)
 
                     return JsonResponse({
                         "order_list" : new_orders,
@@ -165,6 +165,13 @@ def payment_callback(request):
                 
                 jsonData = cache.get(data['additional_param'])
                 print(f"JSON Data: {jsonData}")
+                
+                order_data = json.loads(jsonData)
+                print(f"Order Data: {order_data}")
+                
+                # for variant in order_data["variants"]:
+                #     order_services.save_order_to_database(order_data["user_id"], variant["quantity"], order_data["notes"], order_data["catering_id"], variant.id)
+                
                 pass
             elif transaction_status == '01':
                 # Handle failure logic

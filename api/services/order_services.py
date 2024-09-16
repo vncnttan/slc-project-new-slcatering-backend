@@ -1,15 +1,14 @@
 from api.serializers import OrderSerializer
-from api.models import Order, Catering
-from datetime import datetime
-from django.http.response import JsonResponse
-from rest_framework import status
-from api.models import User, Order
+from api.models import Catering
 from django.db import transaction
-from django.conf import settings
+import datetime
+
+# Probable error: Stock will be updated when the user bought something,
+# So the create order doesn't check the stock before the user bought something properly
 
 @transaction.atomic
-def create_order_services(user_id, orders, notes,catering : Catering):
-    # TODO: Update logic for creating order through websocket with payment gateway
+def create_order_services(orders, catering : Catering):
+    
     try:
         # Check if the stock is < then all the quantity order
         total_order = 0
@@ -24,11 +23,7 @@ def create_order_services(user_id, orders, notes,catering : Catering):
                 qty = order["quantity"]
                 for _ in range(0, qty):
                     order['is_paid'] = False
-                    # order['ordered_by'] = user_id
-                    # order['ordered_at'] = datetime.now()
-                    # order["notes"] = notes
                     order["quantity"]  = 1
-                    # order['catering_id'] = catering.id
                     if order["variant_id"] == "Reguler":
                         order["variant"] = None
                     else:
@@ -36,13 +31,31 @@ def create_order_services(user_id, orders, notes,catering : Catering):
 
                     new_orders.append(order)
 
-                    # new_order = OrderSerializer(data=order)
-                    # if new_order.is_valid(raise_exception=True):
-                        # new_order.save()
-                        # new_orders.append(new_order)
-
-                    
             return new_orders
+        
     except Exception as e :
         print(f"Erorr: {e}")
+        return None
+    
+def save_order_to_database(ordered_by, quantity, notes, catering_id, variant_id): 
+    new_order = {}
+    try:
+        new_order['is_paid'] = True
+        new_order['ordered_by'] = ordered_by
+        new_order['ordered_at'] = datetime.now()
+        new_order['notes'] = notes
+        new_order['quantity'] = quantity
+        new_order['catering_id'] = catering_id
+        if variant_id == "Reguler":
+            new_order['variant'] = None
+        else:
+            new_order['variant'] = variant_id
+        
+        new_order = OrderSerializer(data=new_order)
+        
+        if new_order.is_valid(raise_exception=True):
+            new_order.save()
+            return new_order
+    except Exception as e:
+        print(f"Error: {e}")
         return None
