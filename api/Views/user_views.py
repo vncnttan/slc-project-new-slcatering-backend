@@ -9,7 +9,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 import requests
 from api.services.user_services import get_spesific_user_by_username
 from drf_yasg.utils import swagger_auto_schema
-from api.swaagger_schemas import get_user_schema, delete_user_schema, get_leaderboard_schema, login_schema
+from api.swagger_schemas import get_user_schema, delete_user_schema, get_leaderboard_schema, login_schema
 
 @swagger_auto_schema(**get_user_schema)
 @swagger_auto_schema(**delete_user_schema)

@@ -8,7 +8,7 @@ from api.services import user_services, catering_services
 from api.models import Catering
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from swaagger_schemas import get_catering_schema, create_catering_schema, close_catering_schema
+from api.swagger_schemas import get_catering_schema, create_catering_schema, close_catering_schema
 
 @swagger_auto_schema(**get_catering_schema)
 @swagger_auto_schema(**create_catering_schema)

@@ -59,3 +59,7 @@ def save_order_to_database(ordered_by, quantity, notes, catering_id, variant_id)
     except Exception as e:
         print(f"Error: {e}")
         return None
+    
+    
+# def verify_signature(merchant_code, data, signature):
+#     signature = settings.PAYMENT_GATEWAY_MERCHANT_CODE + data["catering_id"] + user.username + str(total_amount) + settings.PAYMENT_GATEWAY_API_KEY

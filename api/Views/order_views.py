@@ -21,7 +21,7 @@ import json
 import hashlib
 from django.views.decorators.csrf import csrf_exempt
 import json
-from swaagger_schemas import create_order_schema, get_order_schema
+from api.swagger_schemas import create_order_schema, get_order_schema
 
 
 @swagger_auto_schema(**get_order_schema)
