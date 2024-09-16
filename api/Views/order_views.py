@@ -21,74 +21,11 @@ import json
 import hashlib
 from django.views.decorators.csrf import csrf_exempt
 import json
+from swaagger_schemas import create_order_schema, get_order_schema
 
 
-@swagger_auto_schema(
-    method='get',
-    operation_description=(
-        "Retrive orders. "
-        "If there is id in the request parameter, then it will get all order from a catering. "
-        "If there is no id in the request parameter, then it will get all order from a current logged in user."
-    ),
-    manual_parameters=[
-        openapi.Parameter(
-            name='id',
-            in_= openapi.IN_QUERY,
-            type=openapi.TYPE_STRING,
-            description="Get all order from a spesific catering",
-            required=False
-        ),
-    ],
-    responses={
-        200: "Succesfull response",
-        403 : "Access denied",
-        500 : "Unexpected error"
-    }
-)
-@swagger_auto_schema(
-    method='post',
-    operation_description=(
-        "Create orders. "
-        "Create catering orders for users and generate the qr code for payment"
-    ),
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            "catering_id" : openapi.Schema(type=openapi.TYPE_STRING, description="Catering id used to determine which catering user wants to order"),
-            "variants": openapi.Schema(
-                type=openapi.TYPE_ARRAY,
-                items=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        "variant_id": openapi.Schema(
-                            type=openapi.TYPE_STRING,
-                            description="variant_id used to determine the variant wanted to be bought buy the user"
-                            ),
-                        "quantity": openapi.Schema(
-                            type=openapi.TYPE_INTEGER,
-                            description="Quantity used to determine the total of the variant to be bought"
-                        ),
-                    }
-                    
-                ),
-                description="Variants is a list of the variants ordered by the user"
-            ),
-            "notes" : openapi.Schema(
-                type=openapi.TYPE_STRING, 
-                description="User notes for the seller"
-                )
-        },
-        required=['catering', 'variants', 'notes']
-        
-    ),
-    responses={
-        200 : "Succesfull response",
-        400 : "Bad request",
-        403 : "Authentication needed",
-        406 : "Out of stock",
-        500 : "Unexpected error"
-    }
-)
+@swagger_auto_schema(**get_order_schema)
+@swagger_auto_schema(**create_order_schema)
 @api_view(["POST", "GET"])
 def order(request):
     if request.method == "POST":
