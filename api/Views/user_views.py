@@ -9,48 +9,10 @@ from rest_framework_simplejwt.tokens import AccessToken
 import requests
 from api.services.user_services import get_spesific_user_by_username
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from api.swaagger_schemas import get_user_schema, delete_user_schema, get_leaderboard_schema, login_schema
 
-# Create your views here.
-
-@swagger_auto_schema(
-    method='get',
-    security=[{'Bearer': []}],
-    operation_description=(
-        "Retrieve specific user data based on the Authorization Token."
-    ),
-    manual_parameters=[
-        openapi.Parameter(
-            name='all',
-            in_=openapi.IN_QUERY,
-            type=openapi.TYPE_BOOLEAN,
-            description="Get all users parameter",
-            required=False
-        ),
-    ],
-    responses={
-        200:"Succesfull response",
-        500: "Unexpected error"
-    }
-)
-@swagger_auto_schema(
-    method='delete',
-    security=[{'Bearer': []}],
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'user_id' : openapi.Schema(type=openapi.TYPE_STRING, description="User id to be deleted")
-        },
-        required=['user_id']
-        
-    ),
-    responses={
-        200:"Succesfully response",
-        406 : "You cannot delete your own account",
-        404: "User does not exist",
-        500 : "Unexpected error"
-    }
-)
+@swagger_auto_schema(**get_user_schema)
+@swagger_auto_schema(**delete_user_schema)
 @api_view(["GET", "DELETE"])
 def user(request):
     if request.method == "GET":
@@ -58,6 +20,8 @@ def user(request):
     elif request.method == "DELETE":
         return delete_user(request)
 
+
+@swagger_auto_schema(**get_leaderboard_schema)
 @api_view(["GET"])
 def leaderboards(request):
     if request.method == "GET":
@@ -74,22 +38,7 @@ def leaderboards(request):
             else:
                 return JsonResponse([], status=status.HTTP_200_OK)
 
-@swagger_auto_schema(
-    method='post',
-    request_body=openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'username' : openapi.Schema(type=openapi.TYPE_STRING, description="Fill in with username"),
-            'password' : openapi.Schema(type=openapi.TYPE_STRING, description="Fill in with password")
-        },
-        required=['username', 'password']
-    ),
-    responses={
-        200: "Succesfull response",
-        400: "Invalid username / password",
-        500: "Unexpected error"
-    }
-)
+@swagger_auto_schema(**login_schema)
 @api_view(['POST'])
 def login(request):
     try: 
@@ -117,7 +66,7 @@ def login(request):
     user = get_spesific_user_by_username(username)
 
     if not user:
-        # use this if need extra data such as Full Name, etc.
+        # Use this if need extra data such as Full Name, etc.
         # messier_login_token = messier_login_token["access_token"]
         # messier_user_data = requests.get(base_url + "Me", headers={"Authorization": "Bearer " + messier_login_token}).json() 
 
@@ -132,32 +81,32 @@ def login(request):
     access_token = AccessToken().for_user(user=user)
     return JsonResponse({'access_token' : str(access_token), 'message': 'Login Succesfully !'}, status=status.HTTP_200_OK)
 
-# Custom Functions for User -> Soon will be moved to services
+
 def get_all_user():
-    users = User.objects.all()
-    users_serializer = UserSerializer(users, many=True).data
-    return JsonResponse(users_serializer, status=status.HTTP_200_OK, safe=False)
+    try:
+        users_data = user_services.get_all_user()
+        return JsonResponse(users_data, status=status.HTTP_200_OK, safe=False)
+    except Exception as e:
+        return JsonResponse(
+            {"message": "An error occurred while fetching users", "error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 def get_user(request):
     try:
         user_id = request.user_id
-        user = User.objects.get(id=str(user_id))
-        ser_data = UserSerializer(user).data
-        # ser_data.pop('password')
-        return JsonResponse(ser_data, status=status.HTTP_200_OK)
+        user = user_services.get_spesific_user_by_id(user_id)
+        user_data = UserSerializer(user).data
+        return JsonResponse(user_data, status=status.HTTP_200_OK)
     except Exception as e:
         return JsonResponse({"message" : "Oops something went wrong !", "error" : str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 def delete_user(request):
     try:
-        curr_userid = request.user_id.replace('-', '')
+        current_user_id = request.user_id.replace('-', '')
         data = JSONParser().parse(request)
-        if(curr_userid == data['user_id'].replace('-', '')):
-            return JsonResponse({"message":"You cannot delete your own account"}, status=status.HTTP_406_NOT_ACCEPTABLE)
-        user = User.objects.get(id=data["user_id"])
-        user_delete_username = user.username
-        user.delete()
-        return JsonResponse({"message": "Successfully deleted "+user_delete_username}, status=status.HTTP_200_OK)
+        deleted_username = user_services.delete_user_by_id(data['user_id'], current_user_id)
+        return JsonResponse({"message": f"Successfully deleted {deleted_username}"}, status=status.HTTP_200_OK)
     except(User.DoesNotExist):
         return JsonResponse({"message": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:

@@ -133,7 +133,9 @@ def create_order(request):
                     if new_order["variant"] != None:
                         variant = VariantCaterings.objects.get(id = new_order["variant"])
                         total_amount += variant.additional_price
-
+                
+                signature = settings.PAYMENT_GATEWAY_MERCHANT_CODE + data["catering_id"] + user.username + str(total_amount) + settings.PAYMENT_GATEWAY_API_KEY
+                
                 # Create Request Structure
                 request_body = {
                     "merchantCode": settings.PAYMENT_GATEWAY_MERCHANT_CODE,
@@ -143,9 +145,10 @@ def create_order(request):
                     "productDetails": "Pembayaran untuk catering makanan.",
                     "email": user.username+ "@gmail.com",
                     "customerVaName" : user.username,
+                    "additionalParam": f"cart_{user_id}",
                     "returnUrl" : "https://example.com",
                     "callbackUrl" : settings.PAYMENT_GATEWAY_CALLBACK_URL,
-                    "signature":hashlib.md5((settings.PAYMENT_GATEWAY_MERCHANT_CODE + data["catering_id"] + user.username + str(total_amount) + settings.PAYMENT_GATEWAY_API_KEY).encode("utf-8")).hexdigest()
+                    "signature":hashlib.md5((signature).encode("utf-8")).hexdigest()
                 }
                 headers = {"Content-Type": "application/json"}
                 request_body_json = json.dumps(request_body)
@@ -155,10 +158,10 @@ def create_order(request):
                 response = requests.post(endpoint_gateway, data=request_body_json, headers=headers, timeout=30)
                 if response.status_code == 200:
                     response = response.json()
-                    print(f"Response: {response}")
+                    # print(f"Response: {response}")
                     duitku_reference = response["reference"]
                     
-                    print("Duitku Reference: ", duitku_reference)
+                    # print("Duitku Reference: ", duitku_reference)
                     # list_order_view_serializer = []
                     # for new_order in new_orders:
                         # order_obj = Order.objects.get(id = new_order.data["id"])
@@ -177,7 +180,6 @@ def create_order(request):
                         "amount" : total_amount,
                         "qrString" : response["qrString"]
                     }
-                    print(f"Data: {data}")
                     cache.set(f"cart_{user_id}", json.dumps(data), timeout=3600)
 
                     return JsonResponse({
@@ -207,22 +209,25 @@ def payment_callback(request):
             return JsonResponse({'error': 'Invalid content type'}, status=400)
         
         try:
-            required_fields = ['status', 'order_id', 'amount']
+            required_fields = ['status', 'order_id', 'amount', 'additional_param', 'reference', 'signature']
             print(f"Data: {data}")
 
             if not all(field in data for field in required_fields):
-                print(f"Missing required fields. Received data: {data}")
                 return JsonResponse({'error': 'Missing required fields'}, status=400)
 
             transaction_status = data['resultCode']
             duitku_reference = data['reference']
             amount = data['amount']
+            
+            # TODO: Verify Signature
 
             if transaction_status == '00':
                 # Handle success logic (e.g., marking order as paid)
                 print(f"Order with ref {duitku_reference} is paid with amount {amount}")
                 print("Callback success is triggered")
-                print()
+                
+                jsonData = cache.get(data['additional_param'])
+                print(f"JSON Data: {jsonData}")
                 pass
             elif transaction_status == '01':
                 # Handle failure logic

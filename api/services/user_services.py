@@ -28,3 +28,21 @@ def get_top_customer():
         return users_serializer
     except User.DoesNotExist:
         return None
+
+def get_all_user():
+    users = User.objects.all()
+    users_serializer = UserSerializer(users, many=True)
+    return users_serializer.data
+
+def delete_user_by_id(user_id, current_user_id):
+    if(current_user_id == user_id):
+        raise ValueError("You cannot delete your own account")
+    try:
+        user = User.objects.get(id=user_id)
+        username = user.username
+        user.delete()
+        return username
+    except User.DoesNotExist:
+        raise User.DoesNotExist("User does not exist")
+    except Exception as e:
+        raise e
