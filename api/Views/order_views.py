@@ -54,9 +54,11 @@ def create_order(request):
         user_id = request.user_id
         data = JSONParser().parse(request)
         catering = get_specific_catering_by_id(data["catering_id"])
-        if catering != None:
-            new_orders = create_order_services(user_id, data["variants"], data["notes"],catering)
 
+        if catering != None:
+            new_orders = create_order_services(data["variants"], catering)
+
+            print(f"!!!New orders: {new_orders}")
             if new_orders != None:
                 # order_ids = [order.data['id'] for order in new_orders]
                 # concatenated_order_ids = '#'.join(map(str, order_ids))
@@ -66,12 +68,12 @@ def create_order(request):
                 user = User.objects.get(id = user_id)
                 total_amount = 0
                 for new_order in new_orders:
-                    total_amount += catering.price
+                    total_amount += catering.price * new_order['quantity']
                     if new_order["variant"] != None:
                         variant = VariantCaterings.objects.get(id = new_order["variant"])
                         total_amount += variant.additional_price
                 
-                signature = settings.PAYMENT_GATEWAY_MERCHANT_CODE + data["catering_id"] + user.username + str(total_amount) + settings.PAYMENT_GATEWAY_API_KEY
+                signature = settings.PAYMENT_GATEWAY_MERCHANT_CODE + data["catering_id"] + user.username + str(total_amount)  + settings.PAYMENT_GATEWAY_API_KEY
                 
                 # Create Request Structure
                 request_body = {
@@ -179,11 +181,6 @@ def payment_callback(request):
                 print("Callback cancel is triggered")
                 print()
                 pass
-
-            # TODO: Verify signature
-            # if not verify_signature(data, request.headers.get('X-Signature')):
-            #     logger.error("Invalid signature")
-            #     return JsonResponse({'error': 'Invalid signature'}, status=400)
 
             return JsonResponse({'message': 'Callback received'}, status=200)
 

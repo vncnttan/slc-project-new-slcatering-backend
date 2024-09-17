@@ -2,6 +2,8 @@ from api.serializers import OrderSerializer
 from api.models import Catering
 from django.db import transaction
 import datetime
+import hashlib
+from django.conf import settings
 
 # Probable error: Stock will be updated when the user bought something,
 # So the create order doesn't check the stock before the user bought something properly
@@ -20,16 +22,13 @@ def create_order_services(orders, catering : Catering):
             catering.save()
             new_orders = []
             for order in orders:
-                qty = order["quantity"]
-                for _ in range(0, qty):
-                    order['is_paid'] = False
-                    order["quantity"]  = 1
-                    if order["variant_id"] == "Reguler":
-                        order["variant"] = None
-                    else:
-                        order["variant"] = order['variant_id']
+                order['is_paid'] = False
+                if order["variant_id"] == "Reguler":
+                    order["variant"] = None
+                else:
+                    order["variant"] = order['variant_id']
 
-                    new_orders.append(order)
+                new_orders.append(order)
 
             return new_orders
         
@@ -61,5 +60,8 @@ def save_order_to_database(ordered_by, quantity, notes, catering_id, variant_id)
         return None
     
     
-# def verify_signature(merchant_code, data, signature):
-#     signature = settings.PAYMENT_GATEWAY_MERCHANT_CODE + data["catering_id"] + user.username + str(total_amount) + settings.PAYMENT_GATEWAY_API_KEY
+def verify_signature(hashed_signature, catering_id, username, total_amount):
+    signature = settings.PAYMENT_GATEWAY_MERCHANT_CODE + catering_id + username + total_amount + settings.PAYMENT_GATEWAY_API_KEY
+    calculated_signature = hashlib.md5(signature.encode()).hexdigest()
+    print(f"\t Verifying signature hash of {signature} == {hashed_signature}")
+    return hashed_signature == calculated_signature
