@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'drf_yasg',
+    'channels',
     'api.apps.ApiConfig',
     'corsheaders',
     'rest_framework_simplejwt',

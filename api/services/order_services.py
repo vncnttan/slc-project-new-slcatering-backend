@@ -60,8 +60,8 @@ def save_order_to_database(ordered_by, quantity, notes, catering_id, variant_id)
         return None
     
     
-def verify_signature(hashed_signature, catering_id, username, total_amount):
-    signature = settings.PAYMENT_GATEWAY_MERCHANT_CODE + catering_id + username + total_amount + settings.PAYMENT_GATEWAY_API_KEY
-    calculated_signature = hashlib.md5(signature.encode()).hexdigest()
-    print(f"\t Verifying signature hash of {signature} == {hashed_signature}")
+def verify_signature(hashed_signature, merchant_order_id, total_amount):
+    signature = settings.PAYMENT_GATEWAY_MERCHANT_CODE + merchant_order_id + total_amount + settings.PAYMENT_GATEWAY_API_KEY
+    calculated_signature = hashlib.md5(signature.encode("utf-8")).hexdigest()
+    print(f"\t Verifying signature hash of {signature}, {calculated_signature} == {hashed_signature}")
     return hashed_signature == calculated_signature

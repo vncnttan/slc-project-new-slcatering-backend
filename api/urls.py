@@ -11,4 +11,5 @@ urlpatterns = [
     path('order', order_views.order),
     path('leaderboards', user_views.leaderboards),
     path('payment/callback', order_views.payment_callback),
+    path('payment/callback-placeholder', order_views.payment_callback_placeholder)
 ]
