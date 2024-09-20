@@ -81,6 +81,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'ordered_by',
             'ordered_at',
             'is_paid',
+            'quantity',
             'catering',
             'notes',
             'variant'

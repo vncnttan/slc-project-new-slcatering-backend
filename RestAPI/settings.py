@@ -48,6 +48,14 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True 
 # Application definition
 
+ASGI_APPLICATION = 'RestAPI.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',

@@ -1,5 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.parsers import JSONParser
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 from rest_framework import status
 from django.conf import settings
 from django.http.response import JsonResponse
@@ -108,8 +110,9 @@ def create_order(request):
                     print(f"Reference: {duitku_reference}, Signature: {hashlib.md5((signature).encode("utf-8")).hexdigest()}, Cart name: cart_{user_id}")
                     return JsonResponse({
                         "order_list" : new_orders,
-                        "qrString" : response["qrString"], 
+                        "qr_string" : response["qrString"], 
                         "amount" : response["amount"],
+                        "ordered_by" : user_id,
                         }, status=status.HTTP_201_CREATED)
                 else:
                     return JsonResponse({"message" : f"Oops something went wrong! {response.status_code}: {response.text}, {response.json()}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -182,6 +185,7 @@ def payment_callback(request):
 
 @csrf_exempt 
 def payment_callback_placeholder(request):
+    print("!!! *** Payment Callback Placeholder")
     if request.method == 'POST':
         if request.content_type == 'application/x-www-form-urlencoded':
             data = request.POST.dict()
@@ -217,12 +221,18 @@ def payment_callback_placeholder(request):
             except Exception:
                 return JsonResponse({'error': 'Invalid JSON'}, status=400)
             
-            order_data = json.loads(jsonData)
-            print(f"Order Data: {order_data}")
-            
             for variant in order_data["variants"]:
                 order_services.save_order_to_database(order_data["user_id"], variant["quantity"], order_data["notes"], order_data["catering_id"], variant['variant_id'])
             
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'user_{order_data["user_id"]}',
+                {
+                    'type': 'payment_success',
+                    'message': 'Payment success'
+                }
+            )
+
             pass
         elif transaction_status == '01':
             # Handle failure logic

@@ -1,7 +1,7 @@
 from api.serializers import OrderSerializer
 from api.models import Catering
 from django.db import transaction
-import datetime
+from datetime import datetime
 import hashlib
 from django.conf import settings
 
@@ -9,7 +9,7 @@ from django.conf import settings
 # So the create order doesn't check the stock before the user bought something properly
 
 @transaction.atomic
-def create_order_services(orders, catering : Catering):
+def create_order_services(orders, catering: Catering):
     
     try:
         # Check if the stock is < then all the quantity order
@@ -20,6 +20,7 @@ def create_order_services(orders, catering : Catering):
         if catering.stock >= total_order:
             catering.stock -= total_order
             catering.save()
+
             new_orders = []
             for order in orders:
                 order['is_paid'] = False
@@ -31,6 +32,8 @@ def create_order_services(orders, catering : Catering):
                 new_orders.append(order)
 
             return new_orders
+        else:
+            return None
         
     except Exception as e :
         print(f"Erorr: {e}")
@@ -44,7 +47,7 @@ def save_order_to_database(ordered_by, quantity, notes, catering_id, variant_id)
         new_order['ordered_at'] = datetime.now()
         new_order['notes'] = notes
         new_order['quantity'] = quantity
-        new_order['catering_id'] = catering_id
+        new_order['catering'] = catering_id
         if variant_id == "Reguler":
             new_order['variant'] = None
         else:
@@ -53,8 +56,13 @@ def save_order_to_database(ordered_by, quantity, notes, catering_id, variant_id)
         new_order = OrderSerializer(data=new_order)
         
         if new_order.is_valid(raise_exception=True):
+            print(f"Saving order to database {new_order}")
             new_order.save()
+            
             return new_order
+        else:
+            print(f"Error: {new_order.errors}")
+            return None
     except Exception as e:
         print(f"Error: {e}")
         return None
