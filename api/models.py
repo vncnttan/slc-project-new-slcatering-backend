@@ -34,7 +34,7 @@ class Order(models.Model):
     notes = models.CharField(max_length=255, blank=False)
     variant = models.ForeignKey(to = VariantCaterings, on_delete=models.CASCADE, related_name="variant", null=True, blank=True)
     catering = models.ForeignKey(to = Catering, on_delete=models.CASCADE, related_name="catering")
-    duitku_reference = models.CharField(max_length=255, null=True)
+    publisher_order_id = models.CharField(max_length=255, null=True)
     
     
     

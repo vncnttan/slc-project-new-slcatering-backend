@@ -84,7 +84,8 @@ class OrderSerializer(serializers.ModelSerializer):
             'quantity',
             'catering',
             'notes',
-            'variant'
+            'variant',
+            'duitku_reference'
         )
         extra_kwargs = {
             'variant': {'required': False, 'allow_null': True},

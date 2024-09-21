@@ -39,7 +39,7 @@ def create_order_services(orders, catering: Catering):
         print(f"Erorr: {e}")
         return None
     
-def save_order_to_database(ordered_by, quantity, notes, catering_id, variant_id): 
+def save_order_to_database(ordered_by, quantity, notes, catering_id, variant_id, publisher_order_id): 
     new_order = {}
     try:
         new_order['is_paid'] = True
@@ -47,6 +47,7 @@ def save_order_to_database(ordered_by, quantity, notes, catering_id, variant_id)
         new_order['ordered_at'] = datetime.now()
         new_order['notes'] = notes
         new_order['quantity'] = quantity
+        new_order['publisher_order_id'] = publisher_order_id
         new_order['catering'] = catering_id
         if variant_id == "Reguler":
             new_order['variant'] = None

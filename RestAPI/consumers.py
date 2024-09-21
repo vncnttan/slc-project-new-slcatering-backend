@@ -26,5 +26,9 @@ class QRCodeConsumer(AsyncWebsocketConsumer):
         print(f"Payment Success Triggered")
         await self.send(text_data=json.dumps({
             'type': 'payment_success',
-            'message': event['message']
+            'message': event['message'],
+            'publisherId': event['publisherId'],
+            'deliverDate': event['deliverDate'],
         }))
+
+        await self.disconnect(1000)

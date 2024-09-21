@@ -55,12 +55,7 @@ def create_order(request):
         if catering != None:
             new_orders = create_order_services(data["variants"], catering)
 
-            print(f"!!!New orders: {new_orders}")
             if new_orders != None:
-                # order_ids = [order.data['id'] for order in new_orders]
-                # concatenated_order_ids = '#'.join(map(str, order_ids))
-                
-                
                 # Calculating total amount
                 user = User.objects.get(id = user_id)
                 total_amount = 0
@@ -132,92 +127,27 @@ def payment_callback(request):
         if request.content_type == 'application/x-www-form-urlencoded':
             data = request.POST.dict()
         else:
-            print(f"Invalid content type: {request.content_type}")
             return JsonResponse({'error': 'Invalid content type'}, status=400)
         
         required_fields = ['resultCode', 'amount', 'additionalParam', 'reference', 'signature']
-        print(f"Data: {data}")
 
         if not all(field in data for field in required_fields):
             return JsonResponse({'error': 'Missing required fields'}, status=400)
 
         transaction_status = data['resultCode']
         duitku_reference = data['reference']
-        amount = data['amount']
         
         if not verify_signature(data['signature'], data['merchantOrderId'], data['amount']):
             return JsonResponse({'error': 'Invalid signature'}, status=400)
 
         if transaction_status == '00':
             # Handle success logic (e.g., marking order as paid)
-            print(f"Order with ref {duitku_reference} is paid with amount {amount}")
-            print("Callback success is triggered")
-            
-            jsonData = cache.get(data['additionalParam'])
-            print(f"JSON Data: {jsonData}")
-            
-            if jsonData == None:
-                return JsonResponse({'error': 'Transaction data not found'}, status=404)
-
-            try:
-                order_data = json.loads(jsonData)
-                print(f"Order Data: {order_data}")
-            except Exception:
-                return JsonResponse({'error': 'Invalid JSON'}, status=400)
-            
-            for variant in order_data["variants"]:
-                order_services.save_order_to_database(order_data["user_id"], variant["quantity"], order_data["notes"], order_data["catering_id"], variant.id)
-            
-            cache.delete(data['additionalParam'])
-
-            pass
-        elif transaction_status == '01':
-            # Handle failure logic
-            print(f"Order with ref {duitku_reference} is paid with amount {amount}")
-            print("Callback cancel is triggered")
-            print()
-            pass
-
-        return JsonResponse({'message': 'Callback received'}, status=200)
-
-    else:
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
-
-@csrf_exempt 
-def payment_callback_placeholder(request):
-    print("!!! *** Payment Callback Placeholder")
-    if request.method == 'POST':
-        if request.content_type == 'application/x-www-form-urlencoded':
-            data = request.POST.dict()
-        else:
-            print(f"Invalid content type: {request.content_type}")
-            return JsonResponse({'error': 'Invalid content type'}, status=400)
-        
-        required_fields = ['resultCode', 'amount', 'additionalParam', 'reference', 'signature']
-        print(f"Data: {data}")
-
-        if not all(field in data for field in required_fields):
-            return JsonResponse({'error': 'Missing required fields'}, status=400)
-
-        transaction_status = data['resultCode']
-        duitku_reference = data['reference']
-        amount = data['amount']
-        
-        if not verify_signature(data['signature'], data['merchantOrderId'], data['amount']):
-            return JsonResponse({'error': 'Invalid signature'}, status=400)
-
-        if transaction_status == '00':
-            # Handle success logic (e.g., marking order as paid)
-            print(f"Order with ref {duitku_reference} is paid with amount {amount}")
-            print("Callback success is triggered")
-            
             jsonData = cache.get(data['additionalParam'])
             if jsonData == None:
                 return JsonResponse({'error': 'Transaction data not found'}, status=404)
 
             try:
                 order_data = json.loads(jsonData)
-                print(f"Order Data: {order_data}")
             except Exception:
                 return JsonResponse({'error': 'Invalid JSON'}, status=400)
             
@@ -232,13 +162,65 @@ def payment_callback_placeholder(request):
                     'message': 'Payment success'
                 }
             )
-
             pass
+
         elif transaction_status == '01':
             # Handle failure logic
-            print(f"Order with ref {duitku_reference} is paid with amount {amount}")
-            print("Callback cancel is triggered")
-            print()
+            pass
+
+        return JsonResponse({'message': 'Callback received'}, status=200)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+
+@csrf_exempt 
+def payment_callback_placeholder(request):
+    print("!!! *** Payment Callback Placeholder")
+    if request.method == 'POST':
+        if request.content_type == 'application/x-www-form-urlencoded':
+            data = request.POST.dict()
+        else:
+            return JsonResponse({'error': 'Invalid content type'}, status=400)
+        
+        required_fields = ['resultCode', 'amount', 'additionalParam', 'reference', 'signature']
+
+        if not all(field in data for field in required_fields):
+            return JsonResponse({'error': 'Missing required fields'}, status=400)
+
+        transaction_status = data['resultCode']
+        duitku_reference = data['reference']
+        publisher_order_id = data['publisherOrderId']
+        
+        if not verify_signature(data['signature'], data['merchantOrderId'], data['amount']):
+            return JsonResponse({'error': 'Invalid signature'}, status=400)
+
+        if transaction_status == '00':
+            # Handle success logic (e.g., marking order as paid)
+            jsonData = cache.get(data['additionalParam'])
+            if jsonData == None:
+                return JsonResponse({'error': 'Transaction data not found'}, status=404)
+
+            try:
+                order_data = json.loads(jsonData)
+            except Exception:
+                return JsonResponse({'error': 'Invalid JSON'}, status=400)
+            
+            for variant in order_data["variants"]:
+                order_services.save_order_to_database(order_data["user_id"], variant["quantity"], order_data["notes"], order_data["catering_id"], variant['variant_id'], publisher_order_id)
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f'user_{order_data["user_id"]}',
+                {
+                    'type': 'payment_success',
+                    'message': 'Payment success',
+                    'publisherId': publisher_order_id,
+                }
+            )
+            pass
+
+        elif transaction_status == '01':
+            # Handle failure logic
             pass
 
         return JsonResponse({'message': 'Callback received'}, status=200)
