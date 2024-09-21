@@ -31,4 +31,4 @@ class QRCodeConsumer(AsyncWebsocketConsumer):
             'deliverDate': event['deliverDate'],
         }))
 
-        await self.disconnect(1000)
+        return await self.close()
