@@ -91,8 +91,6 @@ SIMPLE_JWT = {
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     os.environ.get("FRONTEND_HOST")
-    # TODO before hosting: Revert back to https
-    # "http://localhost:5173"
 ]
 
 MIDDLEWARE = [

@@ -17,6 +17,7 @@ def create_order_services(orders, catering: Catering):
         for order in orders:
             total_order += order["quantity"]
         
+        
         if catering.stock >= total_order:
             catering.stock -= total_order
             catering.save()

@@ -9,7 +9,7 @@ from api.models import User,Order, VariantCaterings
 from api.serializers import OrderViewSerializer
 from api.services import order_services
 from drf_yasg.utils import swagger_auto_schema
-from api.services.catering_services import get_specific_catering_by_id
+from api.services.catering_services import get_specific_catering_object_by_id
 from api.services.order_services import create_order_services, verify_signature
 from django.conf import settings
 from django.core.cache import cache
@@ -50,7 +50,7 @@ def create_order(request):
     try:
         user_id = request.user_id
         data = JSONParser().parse(request)
-        catering = get_specific_catering_by_id(data["catering_id"])
+        catering = get_specific_catering_object_by_id(data["catering_id"])
 
         if catering != None:
             new_orders = create_order_services(data["variants"], catering)
@@ -84,7 +84,7 @@ def create_order(request):
                 headers = {"Content-Type": "application/json"}
                 request_body_json = json.dumps(request_body)
                 endpoint_gateway = settings.PAYMENT_GATEWAY_URL + "/v2/inquiry"
-                print(f"!!! Signature: {signature}, Hashed signature: {hashlib.md5((signature).encode('utf-8')).hexdigest()}")
+                # print(f"!!! Signature: {signature}, Hashed signature: {hashlib.md5((signature).encode('utf-8')).hexdigest()}")
     
                 # Send Request to Payment Gateway
                 response = requests.post(endpoint_gateway, data=request_body_json, headers=headers, timeout=30)
@@ -151,7 +151,7 @@ def payment_callback(request):
             except Exception:
                 return JsonResponse({'error': 'Invalid JSON'}, status=400)
             
-            catering = get_specific_catering_by_id(order_data["catering_id"])
+            catering = get_specific_catering_object_by_id(order_data["catering_id"])
             
             for variant in order_data["variants"]:
                 order_services.save_order_to_database(order_data["user_id"], variant["quantity"], order_data["notes"], order_data["catering_id"], variant['variant_id'], publisher_order_id)
@@ -163,7 +163,7 @@ def payment_callback(request):
                     'type': 'payment_success',
                     'message': 'Payment success',
                     'publisherId': publisher_order_id,
-                    'deliverDate': catering.date.strftime("%Y-%m-%d %H:%M:%S"),
+                    'deliverDate': catering.date.strftime("%Y-%M-%d"),
                 }
             )
             pass
@@ -208,7 +208,7 @@ def payment_callback_pc(request):
             except Exception:
                 return JsonResponse({'error': 'Invalid JSON'}, status=400)
             
-            catering = get_specific_catering_by_id(order_data["catering_id"])
+            catering = get_specific_catering_object_by_id(order_data["catering_id"])
             
             for variant in order_data["variants"]:
                 order_services.save_order_to_database(order_data["user_id"], variant["quantity"], order_data["notes"], order_data["catering_id"], variant['variant_id'], publisher_order_id)
@@ -220,7 +220,7 @@ def payment_callback_pc(request):
                     'type': 'payment_success',
                     'message': 'Payment success',
                     'publisherId': publisher_order_id,
-                    'deliverDate': catering.date.strftime("%Y-%m-%d %H:%M:%S"),
+                    'deliverDate': catering.date.strftime("%Y-%M-%d"),
                 }
             )
             pass

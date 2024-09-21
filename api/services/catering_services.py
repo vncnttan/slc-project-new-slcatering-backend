@@ -38,7 +38,6 @@ def get_all_active_sellers_caterings(id):
 def get_all_caterings_by_merchant(merchant_id):
     try:
         caterings = Catering.objects.filter(created_by_id=merchant_id)
-        print("!! Caterings: ", caterings)
         caterings_serializer = CateringViewSerializer(caterings, many=True)
         return caterings_serializer
     except Catering.DoesNotExist:
@@ -47,10 +46,10 @@ def get_all_caterings_by_merchant(merchant_id):
 def get_specific_catering_by_id(id):
     try:
         catering = Catering.objects.get(id=id)
-        return catering
+        catering_serializer = CateringViewSerializer(catering)
+        return catering_serializer
     except Catering.DoesNotExist:
         return None
-    
 
 def get_popular_caterings():
     try:
@@ -59,5 +58,13 @@ def get_popular_caterings():
         ).order_by('-order_count')[:5]
         caterings_serializer = CateringViewSerializer(caterings, many=True)
         return caterings_serializer
+    except Catering.DoesNotExist:
+        return None
+    
+    
+def get_specific_catering_object_by_id(id):
+    try:
+        catering = Catering.objects.get(id=id)
+        return catering
     except Catering.DoesNotExist:
         return None

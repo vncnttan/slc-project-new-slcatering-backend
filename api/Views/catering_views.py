@@ -7,7 +7,6 @@ from api.serializers import CateringSerializer, CateringViewSerializer
 from api.services import user_services, catering_services
 from api.models import Catering
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
 from api.swagger_schemas import get_catering_schema, create_catering_schema, close_catering_schema
 
 @swagger_auto_schema(**get_catering_schema)
@@ -25,7 +24,6 @@ def catering(request):
                     catering = catering_services.get_all_caterings_by_merchant(request.user_id)
                     if catering == None:
                         return JsonResponse([], status=status.HTTP_200_OK)
-                    catering = CateringSerializer(catering)
                     return JsonResponse(catering.data, status=status.HTTP_200_OK, safe=False)
                 else:
                     return JsonResponse({"message" : "Access denied"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -39,7 +37,6 @@ def catering(request):
             if catering == None:
                 return JsonResponse({"message" : "Catering does not exist"}, status=status.HTTP_404_NOT_FOUND)
             else:
-                catering = CateringSerializer(catering)
                 return JsonResponse(catering.data, status=status.HTTP_200_OK, safe=False)
         
         catering = catering_services.get_all_caterings()

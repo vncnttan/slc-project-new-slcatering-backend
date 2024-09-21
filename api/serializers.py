@@ -113,6 +113,7 @@ class OrderViewSerializer(serializers.ModelSerializer):
             'ordered_by',
             'ordered_at',
             'is_paid',
+            'quantity',
             'catering',
             'notes',
             'variant'
@@ -129,15 +130,15 @@ class CateringViewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Catering
         fields = (
-            'id',
-            'title',
-            'price',
-            'date',
-            'imageLink',
-            'created_at',
-            'created_by',
-            'catering_variants',
-            'is_closed',
-            'stock',
-            'order_count'
-        )
+        'id',
+        'title',
+        'imageLink',
+        'price',
+        'is_closed',
+        'stock',
+        'date',
+        'created_at',
+        'created_by',
+        'catering_variants',
+        'order_count'
+    )
