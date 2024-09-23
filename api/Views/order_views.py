@@ -102,7 +102,7 @@ def create_order(request):
                     }
                     cache.set(f"cart_{user_id}", json.dumps(data), timeout=100000)
 
-                    print(f"Reference: {duitku_reference}, Signature: {hashlib.md5((signature).encode("utf-8")).hexdigest()}, Cart name: cart_{user_id}")
+                    # print(f"Reference: {duitku_reference}, Signature: {hashlib.md5((signature).encode("utf-8")).hexdigest()}, Cart name: cart_{user_id}")
                     return JsonResponse({
                         "order_list" : new_orders,
                         "qr_string" : response["qrString"], 
