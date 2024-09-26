@@ -14,6 +14,8 @@ class Catering(models.Model):
     imageLink = models.CharField(default="https://media.istockphoto.com/id/1409329028/vector/no-picture-available-placeholder-thumbnail-icon-illustration-design.jpg?s=612x612&w=0&k=20&c=_zOuJu755g2eEUioiOUdz_mHKJQJn-tDgIAhQzyeKUQ=", max_length=255, blank=False)
     price = models.IntegerField(blank=False)
     created_by = models.ForeignKey(to=User, on_delete=models.CASCADE, related_name='caterings')
+    description = models.CharField(max_length=255, blank=True)
+    weightPortion = models.CharField(max_length=255, blank=True)
     is_closed = models.BooleanField(default=False, blank=False)
     stock = models.IntegerField(default=0, blank=False)
     date = models.DateField(blank=False)
